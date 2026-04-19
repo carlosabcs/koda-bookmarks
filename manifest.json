@@ -1,0 +1,16 @@
+{
+	"manifest_version": 3,
+	"name": "Koda Bookmarks",
+	"version": "1.0.0",
+	"description": "Quickly search and save browser bookmarks.",
+	"permissions": ["bookmarks", "activeTab", "scripting"],
+	"commands": {
+		"open-koda": {
+			"suggested_key": {
+				"default": "Ctrl+Shift+K",
+				"mac": "Command+Shift+K"
+			},
+			"description": "Open Koda Bookmarks browser"
+		}
+	}
+}
