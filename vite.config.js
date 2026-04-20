@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { crx } from "@crxjs/vite-plugin";
+import tailwindcss from "@tailwindcss/vite";
 import manifest from "./manifest.json";
 
 export default defineConfig({
@@ -12,5 +13,5 @@ export default defineConfig({
 			host: "localhost",
 		},
 	},
-	plugins: [react(), crx({ manifest })],
+	plugins: [tailwindcss(), react(), crx({ manifest })],
 });
