@@ -12,5 +12,9 @@
 			},
 			"description": "Open Koda Bookmarks browser"
 		}
+	},
+	"background": {
+		"service_worker": "background.ts",
+		"type": "module"
 	}
 }
