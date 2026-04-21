@@ -5,3 +5,8 @@ export const ACTIONS = {
 export type ExtensionMessage = {
 	action: keyof typeof ACTIONS;
 };
+
+export type FolderItem = {
+	id: string;
+	path: string;
+};
