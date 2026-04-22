@@ -1,9 +1,8 @@
 import React from "react";
-import ReactDOM from "react-dom/client";
-import "./index.css";
-import { ACTIONS, ExtensionMessage, FolderItem } from "./types";
+import { ACTIONS, ExtensionMessage, FolderItem } from "../types";
+import { PageContextChip } from "./PageContextChip";
 
-const KodaUI = () => {
+export const KodaUI = () => {
 	const [showKodaBookmarks, setShowKodaBookmarks] = React.useState(false);
 	const [searchQuery, setSearchQuery] = React.useState("");
 	const [folders, setFolders] = React.useState<FolderItem[]>([]);
@@ -26,7 +25,6 @@ const KodaUI = () => {
 			const response = await chrome.runtime.sendMessage({
 				action: ACTIONS.GET_BOOKMARKS_FOLDERS,
 			});
-			console.log({ response });
 			setFolders(response);
 		};
 		fetchFolders();
@@ -37,7 +35,9 @@ const KodaUI = () => {
 	}
 
 	return (
-		<div className="fixed inset-0 z-[9999] flex items-start justify-center pt-[20vh] bg-surface-container-lowest/40 backdrop-blur-md">
+		<div className="fixed inset-0 z-[9999] flex flex-col items-center pt-[15vh] bg-surface-container-lowest/40 backdrop-blur-md">
+			<PageContextChip />
+
 			{/* Main Palette Chassis */}
 			<div className="w-[600px] bg-surface-container/80 backdrop-blur-2xl rounded-xl shadow-ambient ring-1 ring-outline-variant/15 overflow-hidden text-on-surface">
 				{/* Search Input Container */}
@@ -59,15 +59,3 @@ const KodaUI = () => {
 		</div>
 	);
 };
-
-// Create a root element to inject our React application
-const rootElement = document.createElement("div");
-rootElement.id = "koda-extension-root";
-document.body.appendChild(rootElement);
-
-// Render the application
-ReactDOM.createRoot(rootElement).render(
-	<React.StrictMode>
-		<KodaUI />
-	</React.StrictMode>,
-);
