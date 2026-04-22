@@ -186,6 +186,35 @@ export const KodaUI = () => {
 						)}
 					</div>
 				</div>
+
+				<div className="shrink-0 flex items-center justify-between px-4 py-3 bg-surface-container-highest/30 border-t border-outline-variant/10 text-[10px] text-on-surface-variant font-medium tracking-wide">
+					<span>V1.0.0</span>
+
+					<div className="flex items-center gap-4">
+						<div className="flex items-center gap-1.5">
+							<span className="bg-surface-bright px-1.5 py-0.5 rounded shadow-sm font-mono">
+								↑↓
+							</span>
+							<span>NAVIGATE</span>
+						</div>
+						<div className="flex items-center gap-1.5">
+							<span className="bg-surface-bright px-1.5 py-0.5 rounded shadow-sm font-mono">
+								↵
+							</span>
+							<span>
+								{showCreateOption && selectedIndex === totalSelectableItems - 1
+									? "CREATE & SAVE"
+									: "SAVE"}
+							</span>
+						</div>
+						<div className="flex items-center gap-1.5">
+							<span className="bg-surface-bright px-1.5 py-0.5 rounded shadow-sm font-mono">
+								ESC
+							</span>
+							<span>CLOSE</span>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	);
