@@ -1,20 +1,37 @@
-import { ACTIONS } from "./types";
+import { ACTIONS, ExtensionMessage } from "./types";
+import { flattenBookmarkFolders } from "./utils";
 
 const KODA_COMMAND = "open-koda";
 
-chrome.commands.onCommand.addListener(async (command) => {
-	if (command === KODA_COMMAND) {
-		console.log("Command detected! Waking up Koda... 🐾");
-
-		// 1. Get the active tab in the current window
-		const [tab] = await chrome.tabs.query({
-			active: true,
-			currentWindow: true,
-		});
-
-		// 2. Send a message to that tab's Content Script
-		if (tab && tab.id) {
-			chrome.tabs.sendMessage(tab.id, { action: ACTIONS.TOGGLE_KODA });
-		}
+const getCurrentTabAndSendMessage = async (payload: ExtensionMessage) => {
+	const [tab] = await chrome.tabs.query({
+		active: true,
+		currentWindow: true,
+	});
+	if (!tab || !tab.id) {
+		return;
 	}
+	chrome.tabs.sendMessage(tab.id, payload);
+};
+
+chrome.commands.onCommand.addListener((command) => {
+	if (command !== KODA_COMMAND) {
+		return;
+	}
+	console.log("Command detected! Waking up Koda... 🐾");
+	getCurrentTabAndSendMessage({ action: ACTIONS.TOGGLE_KODA });
 });
+
+chrome.runtime.onMessage.addListener(
+	(message: ExtensionMessage, sender, sendResponse) => {
+		if (message.action === ACTIONS.GET_BOOKMARKS_FOLDERS) {
+			// 1. Fetch data asynchronously
+			chrome.bookmarks.getTree().then((loadedBookmarks) => {
+				// 2. Send the flattened array directly back to the requester
+				sendResponse(flattenBookmarkFolders(loadedBookmarks));
+			});
+			// 3. Return true to indicate we will call sendResponse asynchronously
+			return true;
+		}
+	},
+);

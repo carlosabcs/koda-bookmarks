@@ -2,38 +2,34 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import { ACTIONS, ExtensionMessage, FolderItem } from "./types";
-import { flattenBookmarkFolders } from "./utils";
 
 const KodaUI = () => {
 	const [showKodaBookmarks, setShowKodaBookmarks] = React.useState(false);
 	const [searchQuery, setSearchQuery] = React.useState("");
 	const [folders, setFolders] = React.useState<FolderItem[]>([]);
 
-	const hasLoadedBookmarks = React.useRef(false);
-
 	React.useEffect(() => {
 		const messageListener = (message: ExtensionMessage) => {
-			if (message.action !== ACTIONS.TOGGLE_KODA) {
-				return;
+			if (message.action === ACTIONS.TOGGLE_KODA) {
+				setShowKodaBookmarks((prevState) => !prevState);
 			}
-			setShowKodaBookmarks((prevState) => !prevState);
 		};
 		chrome.runtime.onMessage.addListener(messageListener);
-		return () => {
-			chrome.runtime.onMessage.removeListener(messageListener);
-		};
+		return () => chrome.runtime.onMessage.removeListener(messageListener);
 	}, []);
 
 	React.useEffect(() => {
 		if (!showKodaBookmarks) {
 			return;
 		}
-		const fetchBookmarks = async () => {
-			const loadedBookmarks = await chrome.bookmarks.getTree();
-			setFolders(flattenBookmarkFolders(loadedBookmarks));
-			console.log(flattenBookmarkFolders(loadedBookmarks));
+		const fetchFolders = async () => {
+			const response = await chrome.runtime.sendMessage({
+				action: ACTIONS.GET_BOOKMARKS_FOLDERS,
+			});
+			console.log({ response });
+			setFolders(response);
 		};
-		fetchBookmarks();
+		fetchFolders();
 	}, [showKodaBookmarks]);
 
 	if (!showKodaBookmarks) {
