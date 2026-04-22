@@ -31,6 +31,7 @@ const KodaUI = () => {
 		const fetchBookmarks = async () => {
 			const loadedBookmarks = await chrome.bookmarks.getTree();
 			setFolders(flattenBookmarkFolders(loadedBookmarks));
+			console.log(flattenBookmarkFolders(loadedBookmarks));
 		};
 		fetchBookmarks();
 	}, [showKodaBookmarks]);
