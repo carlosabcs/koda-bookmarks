@@ -11,7 +11,11 @@ const getCurrentTabAndSendMessage = async (payload: ExtensionMessage) => {
 	if (!tab || !tab.id) {
 		return;
 	}
-	chrome.tabs.sendMessage(tab.id, payload);
+	try {
+		await chrome.tabs.sendMessage(tab.id, payload);
+	} catch (error) {
+		console.warn("Koda: Cannot wake up on this page (restricted URL).");
+	}
 };
 
 chrome.commands.onCommand.addListener((command) => {

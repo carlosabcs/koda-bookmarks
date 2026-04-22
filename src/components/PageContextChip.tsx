@@ -6,15 +6,14 @@ export const PageContextChip = () => {
 	React.useEffect(() => {
 		setPageInfo({
 			title: document.title || "Unknown Title",
-			// Just show domain and path (no https://)
 			url: window.location.hostname + window.location.pathname,
 		});
 	}, []);
 
 	return (
-		<div className="mb-4 mx-auto max-w-fit px-4 py-2.5 bg-surface-container/90 backdrop-blur-2xl rounded-full shadow-lg ring-1 ring-outline-variant/20 flex items-center gap-3">
+		<div className="mb-4 mx-auto max-w-fit px-6 py-3.5 bg-surface-container-high rounded-full shadow-lg ring-1 ring-outline-variant/20 flex items-center gap-3">
 			{/* Bookmark Icon SVG */}
-			<div className="text-primary shrink-0">
+			<div className="text-primary flex-shrink-0">
 				<svg
 					width="18"
 					height="18"
