@@ -1,22 +1,23 @@
 import React from "react";
 
-export const PageContextChip = () => {
-	const [pageInfo, setPageInfo] = React.useState({ title: "", url: "" });
+interface PageContextChipProps {
+	pageInfo: { title: string; url: string };
+	setPageInfo: React.Dispatch<
+		React.SetStateAction<{ title: string; url: string }>
+	>;
+}
 
-	React.useEffect(() => {
-		setPageInfo({
-			title: document.title || "Unknown Title",
-			url: window.location.hostname + window.location.pathname,
-		});
-	}, []);
-
+export const PageContextChip: React.FC<PageContextChipProps> = ({
+	pageInfo,
+	setPageInfo,
+}) => {
 	return (
-		<div className="mb-4 mx-auto max-w-fit px-6 py-3.5 bg-surface-container-high rounded-full shadow-lg ring-1 ring-outline-variant/20 flex items-center gap-3">
+		<div className="mb-4 mx-auto w-[600px] px-6 py-3.5 bg-surface-container-high rounded-3xl shadow-lg ring-1 ring-outline-variant/20 flex items-center gap-4 pointer-events-auto">
 			{/* Bookmark Icon SVG */}
 			<div className="text-primary flex-shrink-0">
 				<svg
-					width="18"
-					height="18"
+					width="20"
+					height="20"
 					viewBox="0 0 24 24"
 					fill="currentColor"
 					xmlns="http://www.w3.org/2000/svg"
@@ -25,14 +26,21 @@ export const PageContextChip = () => {
 				</svg>
 			</div>
 
-			{/* Title and URL */}
-			<div className="flex flex-col max-w-[450px]">
-				<span className="text-on-surface text-sm font-semibold truncate leading-tight">
-					{pageInfo.title}
-				</span>
-				<span className="text-on-surface-variant text-xs truncate leading-tight mt-0.5">
-					{pageInfo.url}
-				</span>
+			<div className="flex flex-col w-full gap-0.5 overflow-hidden">
+				<input
+					type="text"
+					value={pageInfo.title}
+					onChange={(e) => setPageInfo({ ...pageInfo, title: e.target.value })}
+					className="bg-transparent outline-none text-on-surface text-sm font-semibold w-full truncate placeholder-on-surface-variant focus:text-primary transition-colors"
+					placeholder="Bookmark Title"
+				/>
+				<input
+					type="text"
+					value={pageInfo.url}
+					onChange={(e) => setPageInfo({ ...pageInfo, url: e.target.value })}
+					className="bg-transparent outline-none text-on-surface-variant text-xs w-full truncate placeholder-on-surface-variant/50 focus:text-primary transition-colors"
+					placeholder="Bookmark URL"
+				/>
 			</div>
 		</div>
 	);

@@ -8,6 +8,17 @@ import tailwindStyles from "./index.css?inline";
 
 const host = document.createElement("div");
 host.id = "koda-extension-host";
+
+// For sites like YouTube
+host.style.position = "fixed";
+host.style.inset = "0";
+host.style.zIndex = "2147483647"; // Max z-index
+host.style.pointerEvents = "none"; // Allows clicking through the host while Koda is hidden
+
+// FIX: Force the base font size to 16px. This prevents sites like YouTube
+// (which change the root font size to 10px) from shrinking Tailwind's 'rem' units.
+host.style.fontSize = "16px";
+
 document.body.appendChild(host);
 
 // Create a Shadow DOM host element
