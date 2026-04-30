@@ -41,17 +41,58 @@ chrome.runtime.onMessage.addListener(
 			chrome.bookmarks.search({ url: message.url }).then(async (results) => {
 				if (results.length > 0) {
 					const bookmark = results[0];
-					// Get the parent folder to display where it is currently saved
 					const parent = await chrome.bookmarks.get(bookmark.parentId || "");
 					sendResponse({
 						exists: true,
 						folderName: parent[0]?.title || "Bookmarks Bar",
 						title: bookmark.title,
+						id: bookmark.id, // We need this ID to update/move it later
 					});
-				} else {
-					sendResponse({ exists: false });
+					return;
 				}
+				sendResponse({ exists: false });
 			});
+			return true;
+		}
+
+		if (message.action === ACTIONS.SAVE_BOOKMARK) {
+			const { parentId, title, url, existingId } = message.payload;
+
+			if (existingId) {
+				// Update title/url, then move to the new folder
+				chrome.bookmarks.update(existingId, { title, url }).then(() => {
+					chrome.bookmarks
+						.move(existingId, { parentId })
+						.then(() => sendResponse({ success: true }));
+				});
+				return true;
+			}
+			// Create entirely new bookmark
+			chrome.bookmarks
+				.create({ parentId, title, url })
+				.then(() => sendResponse({ success: true }));
+			return true;
+		}
+
+		if (message.action === ACTIONS.CREATE_FOLDER_AND_SAVE) {
+			const { folderName, title, url, existingId } = message.payload;
+
+			// Default to creating new folders in the Bookmarks Bar (id: "1")
+			chrome.bookmarks
+				.create({ parentId: "1", title: folderName })
+				.then((newFolder) => {
+					if (existingId) {
+						chrome.bookmarks.update(existingId, { title, url }).then(() => {
+							chrome.bookmarks
+								.move(existingId, { parentId: newFolder.id })
+								.then(() => sendResponse({ success: true }));
+						});
+						return true;
+					}
+					chrome.bookmarks
+						.create({ parentId: newFolder.id, title, url })
+						.then(() => sendResponse({ success: true }));
+				});
 			return true;
 		}
 	},
