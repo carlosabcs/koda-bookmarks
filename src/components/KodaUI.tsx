@@ -17,8 +17,6 @@ export const KodaUI = () => {
 		folderName: "",
 		id: "",
 	});
-
-	// New state to track if we are picking a parent for a newly created folder
 	const [pendingFolderName, setPendingFolderName] = React.useState<
 		string | null
 	>(null);
@@ -85,24 +83,68 @@ export const KodaUI = () => {
 	}, [showKodaBookmarks]);
 
 	React.useEffect(() => {
-		const handleGlobalKeyDown = (e: KeyboardEvent) => {
-			if (e.key !== "Escape") return;
-
-			// If we are in folder creation mode, ESC goes back to normal search
-			if (pendingFolderName) {
-				setPendingFolderName(null);
-				setSearchQuery("");
+		const handleGlobalKeyDown = async (e: KeyboardEvent) => {
+			// 1. ESC Key: Close or go back
+			if (e.key === "Escape") {
+				if (pendingFolderName) {
+					setPendingFolderName(null);
+					setSearchQuery("");
+					return;
+				}
+				setShowKodaBookmarks(false);
 				return;
 			}
 
-			setShowKodaBookmarks(false);
+			// 2. DELETE Key: Remove existing bookmark (Cmd/Ctrl + Backspace)
+			if ((e.metaKey || e.ctrlKey) && e.key === "Backspace") {
+				if (!existingContext.exists || !existingContext.id) return;
+
+				e.preventDefault();
+				await chrome.runtime.sendMessage({
+					action: ACTIONS.DELETE_BOOKMARK,
+					payload: { id: existingContext.id },
+				});
+
+				setToastMessage("Bookmark removed successfully");
+				setShowKodaBookmarks(false);
+				return;
+			}
+
+			// 3. TAB Key: Focus Trap
+			if (e.key === "Tab") {
+				const root = document.getElementById("koda-extension-host")?.shadowRoot;
+				if (!root) return;
+
+				// Find all focusable inputs inside our shadow DOM
+				const focusables = Array.from(root.querySelectorAll("input"));
+				if (focusables.length === 0) return;
+
+				const activeElement = root.activeElement as HTMLElement;
+				const currentIndex = focusables.indexOf(
+					activeElement as HTMLInputElement,
+				);
+
+				e.preventDefault(); // Stop standard browser tab behavior
+
+				if (e.shiftKey) {
+					const prev =
+						currentIndex > 0 ? currentIndex - 1 : focusables.length - 1;
+					focusables[prev].focus();
+				} else {
+					const next =
+						currentIndex < focusables.length - 1 ? currentIndex + 1 : 0;
+					focusables[next].focus();
+				}
+			}
 		};
 
 		if (!showKodaBookmarks) return;
 
-		window.addEventListener("keydown", handleGlobalKeyDown);
-		return () => window.removeEventListener("keydown", handleGlobalKeyDown);
-	}, [showKodaBookmarks, pendingFolderName]);
+		// Use capture phase (true) to intercept keys before the website gets them
+		window.addEventListener("keydown", handleGlobalKeyDown, true);
+		return () =>
+			window.removeEventListener("keydown", handleGlobalKeyDown, true);
+	}, [showKodaBookmarks, pendingFolderName, existingContext]);
 
 	React.useEffect(() => {
 		if (!listContainerRef.current) return;
@@ -127,7 +169,6 @@ export const KodaUI = () => {
 		(folder) => folder.path.toLowerCase() === searchQuery.trim().toLowerCase(),
 	);
 
-	// Hide the "Create" option entirely if we are already selecting a parent folder
 	const showCreateOption =
 		!pendingFolderName && searchQuery.trim().length > 0 && !exactMatchExists;
 	const totalSelectableItems =
@@ -151,7 +192,6 @@ export const KodaUI = () => {
 		if (e.key === "Enter") {
 			e.preventDefault();
 
-			// Flow 1: User is selecting a parent folder for their new pending folder
 			if (pendingFolderName) {
 				const selectedParent = filteredFolders[selectedIndex];
 				if (!selectedParent) return;
@@ -176,14 +216,12 @@ export const KodaUI = () => {
 				return;
 			}
 
-			// Flow 2: User initiates creation of a new folder
 			if (showCreateOption && selectedIndex === totalSelectableItems - 1) {
 				setPendingFolderName(searchQuery.trim());
 				setSearchQuery("");
 				return;
 			}
 
-			// Flow 3: User saves bookmark directly to an existing folder
 			const selectedFolder = filteredFolders[selectedIndex];
 			if (!selectedFolder) return;
 
@@ -206,7 +244,6 @@ export const KodaUI = () => {
 		}
 	};
 
-	// Determine dynamic subtitle based on current state
 	const getSubtitle = () => {
 		if (pendingFolderName)
 			return `Select parent folder for '${pendingFolderName}'`;
@@ -331,6 +368,14 @@ export const KodaUI = () => {
 						<div className="shrink-0 flex items-center justify-between px-4 py-3 bg-surface-container-highest/30 border-t border-outline-variant/10 text-[10px] text-on-surface-variant font-medium tracking-wide">
 							<span>V1.0.0</span>
 							<div className="flex items-center gap-4">
+								{existingContext.exists && (
+									<div className="flex items-center gap-1.5">
+										<span className="bg-surface-bright px-1.5 py-0.5 rounded shadow-sm font-mono">
+											⌘/CTRL+⌫
+										</span>
+										<span>DELETE</span>
+									</div>
+								)}
 								<div className="flex items-center gap-1.5">
 									<span className="bg-surface-bright px-1.5 py-0.5 rounded shadow-sm font-mono">
 										↑↓
