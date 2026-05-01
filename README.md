@@ -1,6 +1,8 @@
-# Koda Bookmarks 🐶
-
-A lightning-fast, keyboard-centric bookmark manager for Chromium browsers. Inspired by Spotlight and Raycast, Koda Bookmarks allows you to search, save, move, and organize your bookmarks without ever leaving your keyboard.
+<div align="center">
+  <img src="./public/android-chrome-192.png" alt="Koda Bookmarks Logo" width="128" height="128" />
+  <h1>Koda Bookmarks</h1>
+  <p>A lightning-fast, keyboard-centric bookmark manager for Chromium browsers. Inspired by Spotlight and Raycast, Koda Bookmarks allows you to search, save, move, and organize your bookmarks without ever leaving your keyboard.</p>
+</div>
 
 ## ✨ Features
 
