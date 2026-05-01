@@ -17,14 +17,14 @@ export const PageContextChip: React.FC<PageContextChipProps> = ({
 		<div className="mb-4 mx-auto w-[600px] px-6 py-3.5 bg-surface-container-high rounded-3xl shadow-lg ring-1 ring-outline-variant/20 flex flex-col pointer-events-auto relative">
 			{/* Bookmark Status Badge */}
 			{existingContext.exists && (
-				<div className="absolute -top-3 right-6 bg-primary-container text-on-primary-container text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full shadow-sm ring-1 ring-white/10">
+				<div className="absolute -top-3 right-6 bg-teal-600 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-md ring-1 ring-white/20">
 					Saved in: {existingContext.folderName}
 				</div>
 			)}
 
 			<div className="flex items-center gap-4">
 				{/* Bookmark Icon SVG */}
-				<div className="text-primary flex-shrink-0">
+				<div className="text-teal-500 flex-shrink-0">
 					<svg
 						width="20"
 						height="20"
@@ -44,7 +44,7 @@ export const PageContextChip: React.FC<PageContextChipProps> = ({
 						onChange={(e) =>
 							setPageInfo({ ...pageInfo, title: e.target.value })
 						}
-						className="bg-transparent outline-none text-on-surface text-sm font-semibold w-full truncate placeholder-on-surface-variant focus:text-primary hover:bg-surface-bright/50 focus:bg-surface-bright px-1.5 -ml-1.5 rounded transition-colors cursor-text"
+						className="bg-transparent outline-none text-on-surface text-sm font-semibold w-full truncate placeholder-on-surface-variant focus:text-teal-400 hover:bg-surface-bright/50 focus:bg-surface-bright px-1.5 -ml-1.5 rounded transition-colors cursor-text"
 						placeholder="Bookmark Title"
 					/>
 					<input
@@ -52,7 +52,7 @@ export const PageContextChip: React.FC<PageContextChipProps> = ({
 						title="Edit Bookmark URL"
 						value={pageInfo.url}
 						onChange={(e) => setPageInfo({ ...pageInfo, url: e.target.value })}
-						className="bg-transparent outline-none text-on-surface-variant text-xs w-full truncate placeholder-on-surface-variant/50 focus:text-primary hover:bg-surface-bright/50 focus:bg-surface-bright px-1.5 -ml-1.5 rounded transition-colors cursor-text"
+						className="bg-transparent outline-none text-on-surface-variant text-xs w-full truncate placeholder-on-surface-variant/50 focus:text-teal-400 hover:bg-surface-bright/50 focus:bg-surface-bright px-1.5 -ml-1.5 rounded transition-colors cursor-text"
 						placeholder="Bookmark URL"
 					/>
 				</div>

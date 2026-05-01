@@ -115,7 +115,6 @@ export const KodaUI = () => {
 				const root = document.getElementById("koda-extension-host")?.shadowRoot;
 				if (!root) return;
 
-				// Find all focusable inputs inside our shadow DOM
 				const focusables = Array.from(root.querySelectorAll("input"));
 				if (focusables.length === 0) return;
 
@@ -124,7 +123,7 @@ export const KodaUI = () => {
 					activeElement as HTMLInputElement,
 				);
 
-				e.preventDefault(); // Stop standard browser tab behavior
+				e.preventDefault();
 
 				if (e.shiftKey) {
 					const prev =
@@ -140,7 +139,6 @@ export const KodaUI = () => {
 
 		if (!showKodaBookmarks) return;
 
-		// Use capture phase (true) to intercept keys before the website gets them
 		window.addEventListener("keydown", handleGlobalKeyDown, true);
 		return () =>
 			window.removeEventListener("keydown", handleGlobalKeyDown, true);
@@ -302,9 +300,9 @@ export const KodaUI = () => {
 									return (
 										<div
 											key={folder.id}
-											className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors scroll-mt-10 ${
+											className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 scroll-mt-10 ${
 												isSelected
-													? "bg-primary-container text-white"
+													? "bg-teal-600 text-white shadow-md ring-1 ring-teal-500/50"
 													: "text-on-surface hover:bg-surface-bright"
 											}`}
 											onMouseEnter={() => setSelectedIndex(index)}
@@ -322,7 +320,7 @@ export const KodaUI = () => {
 											</svg>
 											<span className="truncate">{folder.path}</span>
 											{isSelected && (
-												<span className="ml-auto text-[10px] font-bold tracking-widest uppercase opacity-70">
+												<span className="ml-auto text-[10px] font-bold tracking-widest uppercase opacity-90">
 													Jump
 												</span>
 											)}
@@ -332,9 +330,9 @@ export const KodaUI = () => {
 
 								{showCreateOption && (
 									<div
-										className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors mt-2 scroll-mt-10 ${
+										className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 mt-2 scroll-mt-10 ${
 											selectedIndex === filteredFolders.length
-												? "bg-primary-container text-white"
+												? "bg-teal-600 text-white shadow-md ring-1 ring-teal-500/50"
 												: "text-on-surface hover:bg-surface-bright"
 										}`}
 										onMouseEnter={() =>
@@ -356,7 +354,7 @@ export const KodaUI = () => {
 										</svg>
 										<span className="truncate">Create '{searchQuery}'</span>
 										{selectedIndex === filteredFolders.length && (
-											<span className="ml-auto text-[10px] font-bold tracking-widest uppercase opacity-70">
+											<span className="ml-auto text-[10px] font-bold tracking-widest uppercase opacity-90">
 												Create & Save
 											</span>
 										)}
