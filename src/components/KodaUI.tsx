@@ -10,6 +10,7 @@ export const KodaUI = () => {
 	const [folders, setFolders] = React.useState<FolderItem[]>([]);
 	const [selectedIndex, setSelectedIndex] = React.useState(0);
 	const [toastMessage, setToastMessage] = React.useState("");
+	const [isShortcutMissing, setIsShortcutMissing] = React.useState(false);
 
 	const [pageInfo, setPageInfo] = React.useState({ title: "", url: "" });
 	const [existingContext, setExistingContext] = React.useState({
@@ -26,7 +27,8 @@ export const KodaUI = () => {
 	React.useEffect(() => {
 		const messageListener = (message: ExtensionMessage) => {
 			if (message.action !== ACTIONS.TOGGLE_KODA) return;
-			setShowKodaBookmarks((prevState) => !prevState);
+			setShowKodaBookmarks((prev) => !prev);
+			setIsShortcutMissing(!!message.isShortcutMissing);
 		};
 		chrome.runtime.onMessage.addListener(messageListener);
 		return () => chrome.runtime.onMessage.removeListener(messageListener);
@@ -158,6 +160,10 @@ export const KodaUI = () => {
 		setSelectedIndex(0);
 	}, [searchQuery, pendingFolderName]);
 
+	const openShortcutSettings = () => {
+		chrome.runtime.sendMessage({ action: "OPEN_SETTINGS" });
+	};
+
 	const filteredFolders = React.useMemo(() => {
 		if (!searchQuery.trim()) return folders;
 		return folders.filter((folder) => fuzzySearch(searchQuery, folder.path));
@@ -272,6 +278,31 @@ export const KodaUI = () => {
 						onClick={(e) => e.stopPropagation()}
 					>
 						<div className="p-3 shrink-0">
+							{isShortcutMissing && (
+								<div className="bg-teal-600/20 border-b border-teal-500/30 px-4 py-2 flex items-center justify-between gap-3">
+									<div className="flex items-center gap-2 text-teal-400 text-xs font-medium">
+										<svg
+											width="14"
+											height="14"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="2"
+										>
+											<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+											<line x1="12" y1="9" x2="12" y2="13" />
+											<line x1="12" y1="17" x2="12.01" y2="17" />
+										</svg>
+										<span>Shortcut conflict detected.</span>
+									</div>
+									<button
+										onClick={openShortcutSettings}
+										className="text-[10px] bg-teal-600 hover:bg-teal-500 text-white px-2 py-1 rounded transition-colors font-bold uppercase cursor-pointer"
+									>
+										Fix it
+									</button>
+								</div>
+							)}
 							<div className="bg-surface-container-high rounded-lg p-4 flex items-center">
 								<input
 									type="text"

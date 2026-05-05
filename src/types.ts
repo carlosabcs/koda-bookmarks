@@ -5,10 +5,11 @@ export const ACTIONS = {
 	SAVE_BOOKMARK: "SAVE_BOOKMARK",
 	CREATE_FOLDER_AND_SAVE: "CREATE_FOLDER_AND_SAVE",
 	DELETE_BOOKMARK: "DELETE_BOOKMARK",
+	OPEN_SETTINGS: "OPEN_SETTINGS",
 } as const;
 
 export type ExtensionMessage =
-	| { action: typeof ACTIONS.TOGGLE_KODA }
+	| { action: typeof ACTIONS.TOGGLE_KODA; isShortcutMissing?: boolean }
 	| { action: typeof ACTIONS.GET_BOOKMARKS_FOLDERS }
 	| { action: typeof ACTIONS.CHECK_CURRENT_BOOKMARK; url: string }
 	| {
@@ -33,7 +34,8 @@ export type ExtensionMessage =
 	| {
 			action: typeof ACTIONS.DELETE_BOOKMARK;
 			payload: { id: string };
-	  };
+	  }
+	| { action: typeof ACTIONS.OPEN_SETTINGS };
 
 export interface FolderItem {
 	id: string;

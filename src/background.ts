@@ -18,10 +18,25 @@ const getCurrentTabAndSendMessage = async (payload: ExtensionMessage) => {
 	}
 };
 
+const toggleKodaWithShortcutCheck = async () => {
+	const commands = await chrome.commands.getAll();
+	const kodaCmd = commands.find((c) => c.name === KODA_COMMAND);
+	const isShortcutMissing = !kodaCmd || !kodaCmd.shortcut;
+
+	getCurrentTabAndSendMessage({
+		action: ACTIONS.TOGGLE_KODA,
+		isShortcutMissing,
+	});
+};
+
+chrome.action.onClicked.addListener(() => {
+	toggleKodaWithShortcutCheck();
+});
+
 chrome.commands.onCommand.addListener((command) => {
-	if (command !== KODA_COMMAND) return;
-	console.log("Command detected! Waking up Koda... 🐾");
-	getCurrentTabAndSendMessage({ action: ACTIONS.TOGGLE_KODA });
+	if (command === KODA_COMMAND) {
+		toggleKodaWithShortcutCheck();
+	}
 });
 
 chrome.runtime.onMessage.addListener(
@@ -97,6 +112,11 @@ chrome.runtime.onMessage.addListener(
 			chrome.bookmarks.remove(message.payload.id).then(() => {
 				sendResponse({ success: true });
 			});
+			return true;
+		}
+
+		if (message.action === ACTIONS.OPEN_SETTINGS) {
+			chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
 			return true;
 		}
 	},

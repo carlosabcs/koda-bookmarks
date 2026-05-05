@@ -19,8 +19,10 @@
 	"commands": {
 		"open-koda": {
 			"suggested_key": {
-				"default": "Ctrl+Shift+K",
-				"mac": "Command+Shift+K"
+				"default": "Alt+Shift+K",
+				"mac": "Command+Shift+K",
+				"windows": "Alt+Shift+K",
+				"linux": "Alt+Shift+K"
 			},
 			"description": "Open Koda Bookmarks browser"
 		}
