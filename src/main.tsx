@@ -19,6 +19,11 @@ host.style.pointerEvents = "none"; // Allows clicking through the host while Kod
 // (which change the root font size to 10px) from shrinking Tailwind's 'rem' units.
 host.style.fontSize = "16px";
 
+// Prevent keystrokes from leaking to the underlying page (Fixes GitHub/Twitter hotkeys)
+host.addEventListener("keydown", (e) => e.stopPropagation());
+host.addEventListener("keyup", (e) => e.stopPropagation());
+host.addEventListener("keypress", (e) => e.stopPropagation());
+
 document.body.appendChild(host);
 
 // Create a Shadow DOM host element

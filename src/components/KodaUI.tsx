@@ -12,6 +12,9 @@ export const KodaUI = () => {
 	const [toastMessage, setToastMessage] = React.useState("");
 	const [isShortcutMissing, setIsShortcutMissing] = React.useState(false);
 
+	// Lock state to prevent race conditions and double-executions
+	const [isProcessing, setIsProcessing] = React.useState(false);
+
 	const [pageInfo, setPageInfo] = React.useState({ title: "", url: "" });
 	const [existingContext, setExistingContext] = React.useState({
 		exists: false,
@@ -40,6 +43,7 @@ export const KodaUI = () => {
 			setSelectedIndex(0);
 			setPendingFolderName(null);
 			setExistingContext({ exists: false, folderName: "", id: "" });
+			setIsProcessing(false);
 			return;
 		}
 
@@ -84,9 +88,85 @@ export const KodaUI = () => {
 		};
 	}, [showKodaBookmarks]);
 
+	const filteredFolders = React.useMemo(() => {
+		if (!searchQuery.trim()) return folders;
+		return folders.filter((folder) => fuzzySearch(searchQuery, folder.path));
+	}, [folders, searchQuery]);
+
+	const exactMatchExists = filteredFolders.some(
+		(folder) => folder.path.toLowerCase() === searchQuery.trim().toLowerCase(),
+	);
+
+	const showCreateOption =
+		!pendingFolderName && searchQuery.trim().length > 0 && !exactMatchExists;
+	const totalSelectableItems =
+		filteredFolders.length + (showCreateOption ? 1 : 0);
+
+	// Centralized action handler to support both keyboard and mouse clicks
+	const executeAction = async (index: number) => {
+		if (isProcessing) return;
+		setIsProcessing(true);
+
+		if (pendingFolderName) {
+			const selectedParent = filteredFolders[index];
+			if (!selectedParent) {
+				setIsProcessing(false);
+				return;
+			}
+
+			await chrome.runtime.sendMessage({
+				action: ACTIONS.CREATE_FOLDER_AND_SAVE,
+				payload: {
+					parentId: selectedParent.id,
+					folderName: pendingFolderName,
+					title: pageInfo.title,
+					url: pageInfo.url,
+					existingId: existingContext.id || undefined,
+				},
+			});
+
+			setToastMessage(
+				existingContext.exists
+					? "Bookmark updated successfully"
+					: "Bookmark created successfully",
+			);
+			setShowKodaBookmarks(false);
+			return;
+		}
+
+		if (showCreateOption && index === totalSelectableItems - 1) {
+			setPendingFolderName(searchQuery.trim());
+			setSearchQuery("");
+			setIsProcessing(false);
+			return;
+		}
+
+		const selectedFolder = filteredFolders[index];
+		if (!selectedFolder) {
+			setIsProcessing(false);
+			return;
+		}
+
+		await chrome.runtime.sendMessage({
+			action: ACTIONS.SAVE_BOOKMARK,
+			payload: {
+				parentId: selectedFolder.id,
+				title: pageInfo.title,
+				url: pageInfo.url,
+				existingId: existingContext.id || undefined,
+			},
+		});
+
+		setToastMessage(
+			existingContext.exists
+				? "Bookmark moved successfully"
+				: "Bookmark saved successfully",
+		);
+		setShowKodaBookmarks(false);
+	};
+
 	React.useEffect(() => {
 		const handleGlobalKeyDown = async (e: KeyboardEvent) => {
-			// 1. ESC Key: Close or go back
 			if (e.key === "Escape") {
 				if (pendingFolderName) {
 					setPendingFolderName(null);
@@ -97,11 +177,12 @@ export const KodaUI = () => {
 				return;
 			}
 
-			// 2. DELETE Key: Remove existing bookmark (Cmd/Ctrl + Backspace)
 			if ((e.metaKey || e.ctrlKey) && e.key === "Backspace") {
-				if (!existingContext.exists || !existingContext.id) return;
+				if (!existingContext.exists || !existingContext.id || isProcessing)
+					return;
 
 				e.preventDefault();
+				setIsProcessing(true);
 				await chrome.runtime.sendMessage({
 					action: ACTIONS.DELETE_BOOKMARK,
 					payload: { id: existingContext.id },
@@ -112,7 +193,6 @@ export const KodaUI = () => {
 				return;
 			}
 
-			// 3. TAB Key: Focus Trap
 			if (e.key === "Tab") {
 				const root = document.getElementById("koda-extension-host")?.shadowRoot;
 				if (!root) return;
@@ -144,7 +224,7 @@ export const KodaUI = () => {
 		window.addEventListener("keydown", handleGlobalKeyDown, true);
 		return () =>
 			window.removeEventListener("keydown", handleGlobalKeyDown, true);
-	}, [showKodaBookmarks, pendingFolderName, existingContext]);
+	}, [showKodaBookmarks, pendingFolderName, existingContext, isProcessing]);
 
 	React.useEffect(() => {
 		if (!listContainerRef.current) return;
@@ -164,20 +244,6 @@ export const KodaUI = () => {
 		chrome.runtime.sendMessage({ action: "OPEN_SETTINGS" });
 	};
 
-	const filteredFolders = React.useMemo(() => {
-		if (!searchQuery.trim()) return folders;
-		return folders.filter((folder) => fuzzySearch(searchQuery, folder.path));
-	}, [folders, searchQuery]);
-
-	const exactMatchExists = filteredFolders.some(
-		(folder) => folder.path.toLowerCase() === searchQuery.trim().toLowerCase(),
-	);
-
-	const showCreateOption =
-		!pendingFolderName && searchQuery.trim().length > 0 && !exactMatchExists;
-	const totalSelectableItems =
-		filteredFolders.length + (showCreateOption ? 1 : 0);
-
 	const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === "ArrowDown") {
 			e.preventDefault();
@@ -195,56 +261,7 @@ export const KodaUI = () => {
 
 		if (e.key === "Enter") {
 			e.preventDefault();
-
-			if (pendingFolderName) {
-				const selectedParent = filteredFolders[selectedIndex];
-				if (!selectedParent) return;
-
-				await chrome.runtime.sendMessage({
-					action: ACTIONS.CREATE_FOLDER_AND_SAVE,
-					payload: {
-						parentId: selectedParent.id,
-						folderName: pendingFolderName,
-						title: pageInfo.title,
-						url: pageInfo.url,
-						existingId: existingContext.id || undefined,
-					},
-				});
-
-				setToastMessage(
-					existingContext.exists
-						? "Bookmark updated successfully"
-						: "Bookmark created successfully",
-				);
-				setShowKodaBookmarks(false);
-				return;
-			}
-
-			if (showCreateOption && selectedIndex === totalSelectableItems - 1) {
-				setPendingFolderName(searchQuery.trim());
-				setSearchQuery("");
-				return;
-			}
-
-			const selectedFolder = filteredFolders[selectedIndex];
-			if (!selectedFolder) return;
-
-			await chrome.runtime.sendMessage({
-				action: ACTIONS.SAVE_BOOKMARK,
-				payload: {
-					parentId: selectedFolder.id,
-					title: pageInfo.title,
-					url: pageInfo.url,
-					existingId: existingContext.id || undefined,
-				},
-			});
-
-			setToastMessage(
-				existingContext.exists
-					? "Bookmark moved successfully"
-					: "Bookmark saved successfully",
-			);
-			setShowKodaBookmarks(false);
+			await executeAction(selectedIndex);
 		}
 	};
 
@@ -264,6 +281,10 @@ export const KodaUI = () => {
 				<div
 					className="fixed inset-0 z-[9999] flex flex-col items-center pt-[15vh] bg-surface-container-lowest/40 backdrop-blur-md pointer-events-auto font-sans text-base antialiased text-left tracking-normal leading-normal"
 					onClick={() => setShowKodaBookmarks(false)}
+					// Event barriers to prevent keystrokes from leaking to websites like GitHub
+					onKeyDown={(e) => e.stopPropagation()}
+					onKeyUp={(e) => e.stopPropagation()}
+					onKeyPress={(e) => e.stopPropagation()}
 				>
 					<div onClick={(e) => e.stopPropagation()}>
 						<PageContextChip
@@ -331,6 +352,10 @@ export const KodaUI = () => {
 									return (
 										<div
 											key={folder.id}
+											onClick={(e) => {
+												e.stopPropagation();
+												executeAction(index);
+											}}
 											className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 scroll-mt-10 ${
 												isSelected
 													? "bg-teal-600 text-white shadow-md ring-1 ring-teal-500/50"
@@ -361,6 +386,10 @@ export const KodaUI = () => {
 
 								{showCreateOption && (
 									<div
+										onClick={(e) => {
+											e.stopPropagation();
+											executeAction(filteredFolders.length);
+										}}
 										className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 mt-2 scroll-mt-10 ${
 											selectedIndex === filteredFolders.length
 												? "bg-teal-600 text-white shadow-md ring-1 ring-teal-500/50"
@@ -413,7 +442,7 @@ export const KodaUI = () => {
 								</div>
 								<div className="flex items-center gap-1.5">
 									<span className="bg-surface-bright px-1.5 py-0.5 rounded shadow-sm font-mono">
-										↵
+										↵ / CLICK
 									</span>
 									<span>
 										{showCreateOption &&
